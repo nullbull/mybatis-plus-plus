@@ -22,6 +22,6 @@ public abstract class SingleCondition extends IStep {
 
     @Override
     public String toSql() {
-        return  table + "." + column + condition + "#{param" + param + "}";
+        return  table + "." + column + condition + "#{query.param[" + param + "]}";
     }
 }

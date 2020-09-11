@@ -1,6 +1,8 @@
 package com.github.mybatispluspro.core;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.bj58.mism.service.statistics.service.entity.Meeting;
+import com.bj58.mism.service.statistics.service.entity.ZoomMeeting;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
@@ -31,7 +33,11 @@ public class Query<T> implements ISql {
 
    private List<IStep> conditionList = new ArrayList<>();
 
-   private AtomicInteger param = new AtomicInteger(0);
+   private AtomicInteger paramNo = new AtomicInteger(0);
+
+   private Object[] param = new Object[20];
+
+   private String sql = "";
 
 
    public Query select(IGet ...select ) {
@@ -65,8 +71,8 @@ public class Query<T> implements ISql {
        String field = getColumn(a);
        String columnA = camelToUnderline(firstToLowerCase(field));
        String tableName = getTable(a);
-
-       this.conditionList.add(new Eq(columnA, tableName, value, param.getAndIncrement()));
+       this.param[paramNo.get()] = value;
+       this.conditionList.add(new Eq(columnA, tableName, value, paramNo.getAndIncrement()));
        return this;
    }
 
@@ -75,7 +81,7 @@ public class Query<T> implements ISql {
         String columnA = camelToUnderline(firstToLowerCase(field));
         String tableName = getTable(a);
 
-        this.conditionList.add(new Ge(columnA, tableName, value, param.getAndIncrement()));
+        this.conditionList.add(new Ge(columnA, tableName, value, paramNo.getAndIncrement()));
         return this;
     }
 
@@ -175,6 +181,11 @@ public class Query<T> implements ISql {
 
     }
 
+    public Query end() {
+        this.sql = toSql();
+        return this;
+    }
+
     private String selectSql() {
         StringBuilder sb = new StringBuilder();
         sb.append("select ");
@@ -193,6 +204,7 @@ public class Query<T> implements ISql {
             Join join = (Join)joinList;
             sb.append(join.getTable()).append(join.toSql());
         }
+        this.sql = sb.toString();
         return sb.toString();
     }
 
@@ -201,7 +213,25 @@ public class Query<T> implements ISql {
         return condition;
     }
 
+    public static void main(String[] args) {
+        getColumn(Meeting::getId);
+        System.out.println(getTable(Meeting::getId));
+        Query<Serializable> query = new Query<>();
 
+        IGet<Meeting> getId = Meeting::getId;
+        IGet<Meeting> getCreatedAt = Meeting::getCreatedAt;
+        IGet<ZoomMeeting>  zoomMeetingIGet = ZoomMeeting::getMeetingId;
+//        query.select(getId).eq(getId, 1);
+
+
+        query.select(F.f(Meeting::getId), F.f(ZoomMeeting::getMeetingId), F.f(Meeting::getTopic))
+                .joinOn(F.f(Meeting::getId), F.f(ZoomMeeting::getMeetingId))
+                .eq(getId, 1)
+                .ge(F.f(Meeting::getMeetingId), 3);
+        ;
+
+        System.out.println(query.toSql());
+    }
 
 
 }
