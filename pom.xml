@@ -11,7 +11,7 @@
     <dependencies>
         <dependency>
             <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-annotation</artifactId>
+            <artifactId>mybatis-plus</artifactId>
             <version>3.4.0</version>
         </dependency>
 

@@ -1,8 +1,7 @@
 package com.github.mybatispluspro.core;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.bj58.mism.service.statistics.service.entity.Meeting;
-import com.bj58.mism.service.statistics.service.entity.ZoomMeeting;
+import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
@@ -22,8 +21,8 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
  * @date 2020/9/9 10:25
  * @desc
  */
-
-public class Query<T> implements ISql {
+@Data
+public class Query implements ISql {
 
    private List<ISql> selectList = new ArrayList<>();
 
@@ -39,6 +38,11 @@ public class Query<T> implements ISql {
 
    private String sql = "";
 
+   private Class resultType;
+
+   public Query(Class<?> resultType) {
+       this.resultType = resultType;
+   }
 
    public Query select(IGet ...select ) {
        List<Select> selectList = Arrays.stream(select).map(a -> {
@@ -50,7 +54,6 @@ public class Query<T> implements ISql {
         this.selectList.addAll(selectList);
         return this;
    }
-
 
    public Query joinOn(IGet a, IGet b) {
         String field = getColumn(a);
@@ -214,23 +217,6 @@ public class Query<T> implements ISql {
     }
 
     public static void main(String[] args) {
-        getColumn(Meeting::getId);
-        System.out.println(getTable(Meeting::getId));
-        Query<Serializable> query = new Query<>();
-
-        IGet<Meeting> getId = Meeting::getId;
-        IGet<Meeting> getCreatedAt = Meeting::getCreatedAt;
-        IGet<ZoomMeeting>  zoomMeetingIGet = ZoomMeeting::getMeetingId;
-//        query.select(getId).eq(getId, 1);
-
-
-        query.select(F.f(Meeting::getId), F.f(ZoomMeeting::getMeetingId), F.f(Meeting::getTopic))
-                .joinOn(F.f(Meeting::getId), F.f(ZoomMeeting::getMeetingId))
-                .eq(getId, 1)
-                .ge(F.f(Meeting::getMeetingId), 3);
-        ;
-
-        System.out.println(query.toSql());
     }
 
 
