@@ -1,11 +1,13 @@
-package com.github.mybatispluspro.core;
+package com.github.mybatispluspro.condition.single;
+
+import com.github.mybatispluspro.core.IStep;
 
 /**
  * @author niuzhenhao
  * @date 2020/9/9 14:14
  * @desc
  */
-public class Join extends IStep{
+public class Join extends IStep {
 
     private String tableB;
 

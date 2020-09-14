@@ -1,4 +1,6 @@
-package com.github.mybatispluspro.core;
+package com.github.mybatispluspro.condition;
+
+import com.github.mybatispluspro.core.SingleCondition;
 
 /**
  * @author niuzhenhao
@@ -6,7 +8,7 @@ package com.github.mybatispluspro.core;
  * @desc
  */
 
-public class Le extends SingleCondition{
+public class Le extends SingleCondition {
 
     public Le(String column, String table, Object value, int param) {
         super(column, table, value, param);

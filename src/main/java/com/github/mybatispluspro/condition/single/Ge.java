@@ -1,4 +1,6 @@
-package com.github.mybatispluspro.core;
+package com.github.mybatispluspro.condition;
+
+import com.github.mybatispluspro.core.SingleCondition;
 
 /**
  * @author niuzhenhao
