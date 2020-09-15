@@ -51,6 +51,12 @@ public interface SQLConstant {
 
     String PERCENT_SIGN = "%";
 
+    String ORDER_BY = " order by ";
+
+    String AES = " AES ";
+
+    String DESC = " DESC ";
+
 
 
 }

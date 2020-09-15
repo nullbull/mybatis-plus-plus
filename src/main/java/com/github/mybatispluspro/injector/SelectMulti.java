@@ -24,7 +24,6 @@ public class SelectMulti extends AbstractMethod {
 
         SqlNode sqlNode = new MixedSqlNode(Collections.singletonList(new TextSqlNode(sql)));
         SqlSource sqlSource = new DynamicSqlSource(configuration, sqlNode);
-//        SqlSource sqlSource = new RawSqlSource(configuration, new StaticTextSqlNode(sql), String.class);
         return this.addSelectMappedStatementForTable(mapperClass, "selectMulti", sqlSource, tableInfo);
     }
 }

@@ -10,12 +10,14 @@ import com.github.mybatispluspro.core.IStep;
 
 public class GroupBy extends IStep {
 
-    public GroupBy(String column, String table) {
+    private String more;
+    public GroupBy(String column, String table, String more) {
         super(column, table);
+        this.more = more;
     }
 
     @Override
     public String toSql() {
-        return GROUP_BY + table + "." + column;
+        return GROUP_BY + table + "." + column + more;
     }
 }

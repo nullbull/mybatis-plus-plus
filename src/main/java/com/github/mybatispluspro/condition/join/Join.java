@@ -1,4 +1,4 @@
-package com.github.mybatispluspro.condition;
+package com.github.mybatispluspro.condition.join;
 
 import com.github.mybatispluspro.core.IStep;
 

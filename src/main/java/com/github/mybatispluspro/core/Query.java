@@ -1,10 +1,12 @@
 package com.github.mybatispluspro.core;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.github.mybatispluspro.condition.GroupBy;
 import com.github.mybatispluspro.condition.In;
+import com.github.mybatispluspro.condition.OrderBy;
 import com.github.mybatispluspro.condition.multi.Bewteen;
 import com.github.mybatispluspro.condition.single.*;
-import com.github.mybatispluspro.condition.Join;
+import com.github.mybatispluspro.condition.join.Join;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 
@@ -15,6 +17,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -30,11 +33,13 @@ public class Query implements ISql {
 
    private List<ISql> selectList = new ArrayList<>();
 
-   private IStep joinList;
+   private IStep join;
 
    private List<IStep> havingList = new ArrayList<>();
 
    private List<IStep> conditionList = new ArrayList<>();
+
+   private List<IStep> endList = new ArrayList<>();
 
    private AtomicInteger paramNo = new AtomicInteger(0);
 
@@ -44,55 +49,65 @@ public class Query implements ISql {
 
    private Class resultType;
 
+
+   private static ConcurrentHashMap<String, String> TABLE_NAME = new ConcurrentHashMap<>(64);
+
    public Query(Class<?> resultType) {
        this.resultType = resultType;
    }
 
    public Query select(IGet ...select ) {
        List<Select> selectList = Arrays.stream(select).map(a -> {
-           String field = getColumn(a);
-           String column = camelToUnderline(firstToLowerCase(field));
-           String tableName = getTable(a);
-           return new Select(column, tableName);
+           SerializedLambda serializedLambda = getSerializedLambda(a);
+           String field = getColumn(serializedLambda);
+           String tableName = getTable(serializedLambda);
+           String columnA = camelToUnderline(firstToLowerCase(field));
+           return new Select(columnA, tableName);
        }).collect(Collectors.toList());
         this.selectList.addAll(selectList);
         return this;
    }
 
    public Query joinOn(IGet a, IGet b) {
-        String field = getColumn(a);
-        String fieldB = getColumn(b);
+        SerializedLambda serializedLambda = getSerializedLambda(a);
+        SerializedLambda serializedLambdaB = getSerializedLambda(b);
+        String field = getColumn(serializedLambda);
+        String tableName = getTable(serializedLambda);
         String columnA = camelToUnderline(firstToLowerCase(field));
-        String columnB = camelToUnderline(firstToLowerCase(fieldB));
-        String tableName = getTable(a);
-        String tableNameB = getTable(b);
 
-        this.joinList = new Join(columnA, tableName, columnB, tableNameB);
+        String fieldB = getColumn(serializedLambdaB);
+        String columnB = camelToUnderline(firstToLowerCase(fieldB));
+        String tableNameB = getTable(serializedLambdaB);
+
+        this.join = new Join(columnA, tableName, columnB, tableNameB);
         return this;
    }
 
    public Query eq(IGet a, Object value) {
-       String field = getColumn(a);
+       SerializedLambda serializedLambda = getSerializedLambda(a);
+       String field = getColumn(serializedLambda);
+       String tableName = getTable(serializedLambda);
        String columnA = camelToUnderline(firstToLowerCase(field));
-       String tableName = getTable(a);
        this.param[paramNo.get()] = value;
        this.conditionList.add(new Eq(columnA, tableName, value, paramNo.getAndIncrement()));
        return this;
    }
 
     public Query ge(IGet a, Object value) {
-        String field = getColumn(a);
+        SerializedLambda serializedLambda = getSerializedLambda(a);
+        String field = getColumn(serializedLambda);
+        String tableName = getTable(serializedLambda);
         String columnA = camelToUnderline(firstToLowerCase(field));
-        String tableName = getTable(a);
         this.param[paramNo.get()] = value;
         this.conditionList.add(new Ge(columnA, tableName, value, paramNo.getAndIncrement()));
         return this;
     }
 
     public Query between(IGet a, Object param1, Object param2) {
-        String field = getColumn(a);
+        SerializedLambda serializedLambda = getSerializedLambda(a);
+        String field = getColumn(serializedLambda);
+        String tableName = getTable(serializedLambda);
         String columnA = camelToUnderline(firstToLowerCase(field));
-        String tableName = getTable(a);
         this.param[paramNo.get()] = param1;
         this.param[paramNo.get() + 1] = param2;
         this.conditionList.add(new Bewteen(columnA, tableName, param1, param2, paramNo.getAndIncrement(), paramNo.getAndIncrement()));
@@ -101,36 +116,40 @@ public class Query implements ISql {
 
 
     public Query gt(IGet a, Object value) {
-        String field = getColumn(a);
+        SerializedLambda serializedLambda = getSerializedLambda(a);
+        String field = getColumn(serializedLambda);
+        String tableName = getTable(serializedLambda);
         String columnA = camelToUnderline(firstToLowerCase(field));
-        String tableName = getTable(a);
         this.param[paramNo.get()] = value;
         this.conditionList.add(new Gt(columnA, tableName, value, paramNo.getAndIncrement()));
         return this;
     }
 
     public Query lt(IGet a, Object value) {
-        String field = getColumn(a);
+        SerializedLambda serializedLambda = getSerializedLambda(a);
+        String field = getColumn(serializedLambda);
+        String tableName = getTable(serializedLambda);
         String columnA = camelToUnderline(firstToLowerCase(field));
-        String tableName = getTable(a);
         this.param[paramNo.get()] = value;
         this.conditionList.add(new Lt(columnA, tableName, value, paramNo.getAndIncrement()));
         return this;
     }
 
     public Query le(IGet a, Object value) {
-        String field = getColumn(a);
+        SerializedLambda serializedLambda = getSerializedLambda(a);
+        String field = getColumn(serializedLambda);
+        String tableName = getTable(serializedLambda);
         String columnA = camelToUnderline(firstToLowerCase(field));
-        String tableName = getTable(a);
         this.param[paramNo.get()] = value;
         this.conditionList.add(new Ge(columnA, tableName, value, paramNo.getAndIncrement()));
         return this;
     }
 
     public Query in(IGet a, Object... value) {
-        String field = getColumn(a);
+        SerializedLambda serializedLambda = getSerializedLambda(a);
+        String field = getColumn(serializedLambda);
+        String tableName = getTable(serializedLambda);
         String columnA = camelToUnderline(firstToLowerCase(field));
-        String tableName = getTable(a);
         int length = value == null ? 0 : value.length;
         //如果参数数组大小不够了 扩容
         if (param.length - paramNo.get() < length) {
@@ -147,20 +166,63 @@ public class Query implements ISql {
 
 
     public Query like(IGet a, String value) {
-        String field = getColumn(a);
+        SerializedLambda serializedLambda = getSerializedLambda(a);
+        String field = getColumn(serializedLambda);
+        String tableName = getTable(serializedLambda);
         String columnA = camelToUnderline(firstToLowerCase(field));
-        String tableName = getTable(a);
         this.param[paramNo.get()] =  SQLConstant.PERCENT_SIGN + value + SQLConstant.PERCENT_SIGN;
         this.conditionList.add(new Like(columnA, tableName, value, paramNo.getAndIncrement()));
         return this;
     }
 
     public Query rightLike(IGet a, String value) {
-        String field = getColumn(a);
+        SerializedLambda serializedLambda = getSerializedLambda(a);
+        String field = getColumn(serializedLambda);
+        String tableName = getTable(serializedLambda);
         String columnA = camelToUnderline(firstToLowerCase(field));
-        String tableName = getTable(a);
         this.param[paramNo.get()] = value + SQLConstant.PERCENT_SIGN;
         this.conditionList.add(new RightLike(columnA, tableName, value, paramNo.getAndIncrement()));
+        return this;
+    }
+
+    public Query groupBy(IGet ...a) {
+        if (a != null && a.length > 0 ) {
+             SerializedLambda serializedLambda = getSerializedLambda(a[0]);
+             String field = getColumn(serializedLambda);
+             String tableName = getTable(serializedLambda);
+             String columnA = camelToUnderline(firstToLowerCase(field));
+             String more = "";
+            if (a.length > 1) {
+                for (int i = 1; i < a.length; ++i) {
+                    SerializedLambda serializedLambdaB = getSerializedLambda(a[i]);
+                    String fieldB = getColumn(serializedLambdaB);
+                    String tableNameB = getTable(serializedLambdaB);
+                    String columnB = camelToUnderline(firstToLowerCase(fieldB));
+                    more +=  ","  + tableNameB + "." + columnB;
+                }
+            }
+            this.endList.add(new GroupBy(columnA, tableName, more));
+        }
+
+        return this;
+   }
+
+
+    public Query orderByAes(IGet a) {
+        SerializedLambda serializedLambda = getSerializedLambda(a);
+        String field = getColumn(serializedLambda);
+        String tableName = getTable(serializedLambda);
+        String columnA = camelToUnderline(firstToLowerCase(field));
+        this.endList.add(new OrderBy(columnA, tableName, SQLConstant.AES));
+        return this;
+    }
+
+    public Query orderByDesc(IGet a) {
+        SerializedLambda serializedLambda = getSerializedLambda(a);
+        String field = getColumn(serializedLambda);
+        String tableName = getTable(serializedLambda);
+        String columnA = camelToUnderline(firstToLowerCase(field));
+        this.endList.add(new OrderBy(columnA, tableName, SQLConstant.DESC));
         return this;
     }
 
@@ -204,7 +266,7 @@ public class Query implements ISql {
     }
 
 
-    public static <T> SerializedLambda getSerializedLambda(Serializable lambda) {
+    public static SerializedLambda getSerializedLambda(Serializable lambda) {
         SerializedLambda serializedLambda = null;
         try {
             Method writeReplace = lambda.getClass().getDeclaredMethod("writeReplace");
@@ -220,20 +282,47 @@ public class Query implements ISql {
         return serializedLambda;
     }
 
-    public static <T> String getColumn(IGet<T> lambda) {
+    public static String getColumn(IGet lambda) {
         SerializedLambda serializedLambda = getSerializedLambda(lambda);
         String implMethodName = serializedLambda.getImplMethodName();
-        System.out.println(implMethodName);
         return implMethodName.substring(3);
     }
 
-    public static <T> String getTable(IGet<T> lambda) {
+    public static String getTable(IGet lambda) {
         SerializedLambda serializedLambda = getSerializedLambda(lambda);
         try {
             Class<?> aClass = Class.forName(serializedLambda.getImplClass().replace("/", "."));
             TableName annotation = aClass.getAnnotation(TableName.class);
             if (null != annotation) {
                 String value = annotation.value();
+                return value;
+            }
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return EMPTY;
+    }
+
+
+    public static String getColumn(SerializedLambda serializedLambda) {
+        String implMethodName = serializedLambda.getImplMethodName();
+        return implMethodName.substring(3);
+    }
+
+    public static String getTable(SerializedLambda serializedLambda) {
+        String tableName = EMPTY;
+        String className = serializedLambda.getImplClass();
+        tableName = TABLE_NAME.get(className);
+        if (null != tableName) {
+            return tableName;
+        }
+        try {
+            Class<?> aClass = Class.forName(className.replace("/", "."));
+            TableName annotation = aClass.getAnnotation(TableName.class);
+            if (null != annotation) {
+                String value = annotation.value();
+                TABLE_NAME.put(className, value);
                 return value;
             }
         } catch (ClassNotFoundException e) {
@@ -255,6 +344,7 @@ public class Query implements ISql {
         sb.append(fromSql());
         sb.append(SQLConstant.WHERE);
         sb.append(conditionSql());
+        sb.append(endSql());
         return sb.toString();
 
     }
@@ -276,10 +366,9 @@ public class Query implements ISql {
         StringBuilder sb = new StringBuilder();
         sb.append(SQLConstant.FORM);
 
-        if (null == joinList) {
+        if (null == join) {
             sb.append(conditionList.get(0).getColumn());
         } else {
-            Join join = (Join)joinList;
             sb.append(join.getTable()).append(join.toSql());
         }
         this.sql = sb.toString();
@@ -289,6 +378,11 @@ public class Query implements ISql {
     private String conditionSql() {
         String condition = conditionList.stream().map(ISql::toSql).collect(Collectors.joining(" and "));
         return condition;
+    }
+
+    private String endSql() {
+        String endSql = endList.stream().map(IStep::toSql).collect(Collectors.joining(" "));
+        return endSql;
     }
 
     public static void main(String[] args) {
