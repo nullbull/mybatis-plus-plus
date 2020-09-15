@@ -1,6 +1,13 @@
 package com.github.mybatispluspro.core;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.github.mybatispluspro.condition.In;
+import com.github.mybatispluspro.condition.multi.Bewteen;
+import com.github.mybatispluspro.condition.single.Eq;
+import com.github.mybatispluspro.condition.single.Ge;
+import com.github.mybatispluspro.condition.Join;
+import com.github.mybatispluspro.condition.single.Gt;
+import com.github.mybatispluspro.condition.single.Lt;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 
@@ -59,11 +66,8 @@ public class Query implements ISql {
         String field = getColumn(a);
         String fieldB = getColumn(b);
         String columnA = camelToUnderline(firstToLowerCase(field));
-
         String columnB = camelToUnderline(firstToLowerCase(fieldB));
-
         String tableName = getTable(a);
-
         String tableNameB = getTable(b);
 
         this.joinList = new Join(columnA, tableName, columnB, tableNameB);
@@ -83,10 +87,67 @@ public class Query implements ISql {
         String field = getColumn(a);
         String columnA = camelToUnderline(firstToLowerCase(field));
         String tableName = getTable(a);
-
+        this.param[paramNo.get()] = value;
         this.conditionList.add(new Ge(columnA, tableName, value, paramNo.getAndIncrement()));
         return this;
     }
+
+    public Query between(IGet a, Object param1, Object param2) {
+        String field = getColumn(a);
+        String columnA = camelToUnderline(firstToLowerCase(field));
+        String tableName = getTable(a);
+        this.param[paramNo.get()] = param1;
+        this.param[paramNo.get() + 1] = param2;
+        this.conditionList.add(new Bewteen(columnA, tableName, param1, param2, paramNo.getAndIncrement(), paramNo.getAndIncrement()));
+        return this;
+    }
+
+
+    public Query gt(IGet a, Object value) {
+        String field = getColumn(a);
+        String columnA = camelToUnderline(firstToLowerCase(field));
+        String tableName = getTable(a);
+        this.param[paramNo.get()] = value;
+        this.conditionList.add(new Gt(columnA, tableName, value, paramNo.getAndIncrement()));
+        return this;
+    }
+
+    public Query lt(IGet a, Object value) {
+        String field = getColumn(a);
+        String columnA = camelToUnderline(firstToLowerCase(field));
+        String tableName = getTable(a);
+        this.param[paramNo.get()] = value;
+        this.conditionList.add(new Lt(columnA, tableName, value, paramNo.getAndIncrement()));
+        return this;
+    }
+
+    public Query le(IGet a, Object value) {
+        String field = getColumn(a);
+        String columnA = camelToUnderline(firstToLowerCase(field));
+        String tableName = getTable(a);
+        this.param[paramNo.get()] = value;
+        this.conditionList.add(new Ge(columnA, tableName, value, paramNo.getAndIncrement()));
+        return this;
+    }
+
+    public Query in(IGet a, Object... value) {
+        String field = getColumn(a);
+        String columnA = camelToUnderline(firstToLowerCase(field));
+        String tableName = getTable(a);
+        int length = value == null ? 0 : value.length;
+        if (param.length - paramNo.get() < length) {
+
+        }
+        Object[] paramNew = new Object[paramNo.get() + length + 20];
+        System.arraycopy(param, 0, paramNew, 0, paramNo.get());
+        this.param = paramNew;
+        for (int i = 0; i < length; i++) {
+            param[i + paramNo.get()] = value[i];
+        }
+        this.conditionList.add(new In(columnA, tableName, paramNo.getAndAdd(value == null ? 0 : value.length), value));
+        return this;
+    }
+
 
 
 

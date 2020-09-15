@@ -1,4 +1,6 @@
-package com.github.mybatispluspro.core;
+package com.github.mybatispluspro.condition.single;
+
+import com.github.mybatispluspro.core.IStep;
 
 /**
  * @author niuzhenhao

@@ -6,5 +6,13 @@ package com.github.mybatispluspro.condition.single;
  * @desc
  */
 
-public class Gt {
+public class Gt extends SingleCondition {
+
+    public Gt(String column, String table, Object value, int param) {
+        super(column, table, value, param);
+        this.condition = GT;
+    }
+
+
+
 }
