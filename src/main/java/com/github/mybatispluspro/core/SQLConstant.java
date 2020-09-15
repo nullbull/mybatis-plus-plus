@@ -47,6 +47,10 @@ public interface SQLConstant {
 
     String LT = "<";
 
+    String LIKE = " like ";
+
+    String PERCENT_SIGN = "%";
+
 
 
 }

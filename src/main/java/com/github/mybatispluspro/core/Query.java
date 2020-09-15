@@ -3,11 +3,8 @@ package com.github.mybatispluspro.core;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.github.mybatispluspro.condition.In;
 import com.github.mybatispluspro.condition.multi.Bewteen;
-import com.github.mybatispluspro.condition.single.Eq;
-import com.github.mybatispluspro.condition.single.Ge;
+import com.github.mybatispluspro.condition.single.*;
 import com.github.mybatispluspro.condition.Join;
-import com.github.mybatispluspro.condition.single.Gt;
-import com.github.mybatispluspro.condition.single.Lt;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 
@@ -135,12 +132,12 @@ public class Query implements ISql {
         String columnA = camelToUnderline(firstToLowerCase(field));
         String tableName = getTable(a);
         int length = value == null ? 0 : value.length;
+        //如果参数数组大小不够了 扩容
         if (param.length - paramNo.get() < length) {
-
+            Object[] paramNew = new Object[paramNo.get() + length + 20];
+            System.arraycopy(param, 0, paramNew, 0, paramNo.get());
+            this.param = paramNew;
         }
-        Object[] paramNew = new Object[paramNo.get() + length + 20];
-        System.arraycopy(param, 0, paramNew, 0, paramNo.get());
-        this.param = paramNew;
         for (int i = 0; i < length; i++) {
             param[i + paramNo.get()] = value[i];
         }
@@ -149,6 +146,23 @@ public class Query implements ISql {
     }
 
 
+    public Query like(IGet a, String value) {
+        String field = getColumn(a);
+        String columnA = camelToUnderline(firstToLowerCase(field));
+        String tableName = getTable(a);
+        this.param[paramNo.get()] =  SQLConstant.PERCENT_SIGN + value + SQLConstant.PERCENT_SIGN;
+        this.conditionList.add(new Like(columnA, tableName, value, paramNo.getAndIncrement()));
+        return this;
+    }
+
+    public Query rightLike(IGet a, String value) {
+        String field = getColumn(a);
+        String columnA = camelToUnderline(firstToLowerCase(field));
+        String tableName = getTable(a);
+        this.param[paramNo.get()] = value + SQLConstant.PERCENT_SIGN;
+        this.conditionList.add(new RightLike(columnA, tableName, value, paramNo.getAndIncrement()));
+        return this;
+    }
 
 
     /**
