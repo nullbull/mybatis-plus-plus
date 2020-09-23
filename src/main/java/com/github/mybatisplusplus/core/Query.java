@@ -1,6 +1,7 @@
 package com.github.mybatisplusplus.core;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.github.mybatisplusplus.annotation.ColumnTable;
 import com.github.mybatisplusplus.condition.GroupBy;
 import com.github.mybatisplusplus.condition.In;
 import com.github.mybatisplusplus.condition.OrderBy;
@@ -71,9 +72,9 @@ public class Query implements ISql {
 
        for (Field field : fields) {
            String filedTableName = "";
-           TableName tableNameAnnoTemp = field.getAnnotation(TableName.class);
+           ColumnTable tableNameAnnoTemp = field.getAnnotation(ColumnTable.class);
            if (null != tableNameAnnoTemp) {
-               filedTableName = tableNameAnnoTemp.value();
+               filedTableName = tableNameAnnoTemp.table();
            } else {
                filedTableName = tableName;
            }
