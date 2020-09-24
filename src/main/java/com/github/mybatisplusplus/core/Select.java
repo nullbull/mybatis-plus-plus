@@ -7,7 +7,6 @@ package com.github.mybatisplusplus.core;
  */
 public class Select extends IStep{
 
-
     public Select(String column, String table) {
         super(column, table);
     }

@@ -34,5 +34,5 @@ public abstract class IStep implements ISql, SQLConstant {
     }
 
     @Override
-    public  abstract String toSql();
+    public abstract String toSql();
 }

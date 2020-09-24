@@ -5,6 +5,8 @@ import com.github.mybatisplusplus.annotation.ColumnTable;
 import com.github.mybatisplusplus.condition.GroupBy;
 import com.github.mybatisplusplus.condition.In;
 import com.github.mybatisplusplus.condition.OrderBy;
+import com.github.mybatisplusplus.condition.join.LeftJoin;
+import com.github.mybatisplusplus.condition.join.RightJoin;
 import com.github.mybatisplusplus.condition.multi.Bewteen;
 import com.github.mybatisplusplus.condition.single.*;
 import com.github.mybatisplusplus.condition.join.Join;
@@ -53,6 +55,8 @@ public class Query implements ISql {
 
    private Class resultType;
 
+   private String baseTable;
+
 
    private static ConcurrentHashMap<String, String> TABLE_NAME = new ConcurrentHashMap<>(64);
 
@@ -68,6 +72,7 @@ public class Query implements ISql {
        TableName tableNameAnno = (TableName) this.resultType.getAnnotation(TableName.class);
        if (null != tableNameAnno) {
            tableName = tableNameAnno.value();
+           this.baseTable = tableName;
        }
 
        for (Field field : fields) {
@@ -94,7 +99,7 @@ public class Query implements ISql {
         return this;
    }
 
-   public Query joinOn(IGet a, IGet b) {
+    public Query joinOn(IGet a, IGet b) {
         SerializedLambda serializedLambda = getSerializedLambda(a);
         SerializedLambda serializedLambdaB = getSerializedLambda(b);
         String field = getColumn(serializedLambda);
@@ -107,7 +112,36 @@ public class Query implements ISql {
 
         this.join = new Join(columnA, tableName, columnB, tableNameB);
         return this;
+    }
+
+   public Query leftJoin(IGet a, IGet b) {
+        SerializedLambda serializedLambda = getSerializedLambda(a);
+        SerializedLambda serializedLambdaB = getSerializedLambda(b);
+        String field = getColumn(serializedLambda);
+        String tableName = getTable(serializedLambda);
+        String columnA = camelToUnderline(firstToLowerCase(field));
+
+        String fieldB = getColumn(serializedLambdaB);
+        String columnB = camelToUnderline(firstToLowerCase(fieldB));
+        String tableNameB = getTable(serializedLambdaB);
+
+        this.join = new LeftJoin(columnA, tableName, columnB, tableNameB);
+        return this;
    }
+    public Query rightJoin(IGet a, IGet b) {
+        SerializedLambda serializedLambda = getSerializedLambda(a);
+        SerializedLambda serializedLambdaB = getSerializedLambda(b);
+        String field = getColumn(serializedLambda);
+        String tableName = getTable(serializedLambda);
+        String columnA = camelToUnderline(firstToLowerCase(field));
+
+        String fieldB = getColumn(serializedLambdaB);
+        String columnB = camelToUnderline(firstToLowerCase(fieldB));
+        String tableNameB = getTable(serializedLambdaB);
+
+        this.join = new RightJoin(columnA, tableName, columnB, tableNameB);
+        return this;
+    }
 
    public Query eq(IGet a, Object value) {
        SerializedLambda serializedLambda = getSerializedLambda(a);
@@ -360,6 +394,10 @@ public class Query implements ISql {
 
 
 
+    public Query end() {
+        this.sql = toSql();
+        return this;
+    }
 
 
     @Override
@@ -374,10 +412,6 @@ public class Query implements ISql {
 
     }
 
-    public Query end() {
-        this.sql = toSql();
-        return this;
-    }
 
     private String selectSql() {
         StringBuilder sb = new StringBuilder();
@@ -397,7 +431,7 @@ public class Query implements ISql {
         sb.append(SQLConstant.FORM);
 
         if (null == join) {
-            sb.append(conditionList.get(0).getColumn());
+            sb.append(this.baseTable);
         } else {
             sb.append(join.getTable()).append(join.toSql());
         }

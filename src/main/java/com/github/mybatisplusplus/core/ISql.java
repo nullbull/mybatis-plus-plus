@@ -7,6 +7,5 @@ package com.github.mybatisplusplus.core;
  */
 
 public interface ISql {
-
     String toSql();
 }
